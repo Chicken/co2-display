@@ -8,6 +8,7 @@ SCD41_READ_MEASUREMENT = const(0xEC05)
 SCD41_STOP_PERIODIC_MEASUREMENT = const(0x3F86)
 SCD41_START_PERIODIC_MEASUREMENT = const(0x21B1)
 SCD41_POWER_DOWN = const(0x36E0)
+SCD41_SET_AUTOMATIC_SELF_CALIBRATION = const(0x2416)
 
 class Measurement:
     def __init__(self, co2, temperature, relative_humidity):
@@ -66,11 +67,23 @@ class SCD41:
     def power_down(self):
         self.send_command(SCD41_POWER_DOWN)
 
-    def send_command(self, cmd):
-        self.i2c.writeto(self.address, bytearray([
-            (cmd >> 8) & 0xFF,
-            cmd & 0xFF
-        ]))
+    def disable_asc(self):
+        self.send_command(SCD41_SET_AUTOMATIC_SELF_CALIBRATION, 0)
+
+    def send_command(self, cmd, data = None):
+        if data:
+            buf = bytearray(5)
+            buf[0] = (cmd >> 8) & 0xFF
+            buf[1] = cmd & 0xFF
+            buf[2] = (data >> 8) & 0xFF
+            buf[3] = data & 0xFF
+            buf[4] = crc8(buf[2:4])
+            self.i2c.writeto(self.address, buf)
+        else:
+            self.i2c.writeto(self.address, bytearray([
+                (cmd >> 8) & 0xFF,
+                cmd & 0xFF
+            ]))
         sleep_ms(1)
 
     def read_reply(self, reply_words):

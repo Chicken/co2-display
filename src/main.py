@@ -20,6 +20,7 @@ def init_display():
     display = SSD1309(spi, Pin(0), Pin(19))
 init_display()
 
+scd.disable_asc()
 scd.start_periodic_measurement()
 
 past_results = Results()
